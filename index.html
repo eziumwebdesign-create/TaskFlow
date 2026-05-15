@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TaskFlow</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f11;
+    --surface: #1a1a1f;
+    --surface2: #222228;
+    --border: #2e2e38;
+    --accent: #7c6af7;
+    --accent-dim: #7c6af720;
+    --accent-hover: #9585f9;
+    --text: #e8e8f0;
+    --text-muted: #7a7a90;
+    --text-dim: #4a4a5a;
+    --green: #4ade80;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --radius: 10px;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+  }
+
+  .logo span { color: var(--text-muted); }
+
+  .header-meta {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    flex: 1;
+    min-height: 0;
+  }
+
+  aside {
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .sidebar-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 0.5rem 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+
+  .nav-item:hover { background: var(--surface); color: var(--text); }
+  .nav-item.active { background: var(--accent-dim); color: var(--accent); }
+
+  .nav-item .count {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    background: var(--surface2);
+    padding: 1px 6px;
+    border-radius: 99px;
+    color: var(--text-dim);
+  }
+
+  .nav-item.active .count { background: var(--accent-dim); color: var(--accent); }
+
+  main {
+    padding: 2rem;
+    overflow-y: auto;
+  }
+
+  .main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+
+  .main-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+
+  .main-title small {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 1.75rem;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  .stat-value.green { color: var(--green); }
+  .stat-value.amber { color: var(--amber); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.accent { color: var(--accent); }
+
+  .add-task-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  input[type="text"], select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 0.875rem;
+    padding: 0.6rem 0.875rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input[type="text"]:focus, select:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--text-dim); }
+  .task-input { flex: 1; }
+  select { cursor: pointer; color: var(--text-muted); }
+  select option { background: var(--surface2); }
+
+  .btn {
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    font-family: var(--font);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .filters {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .filter-btn {
+    padding: 0.35rem 0.875rem;
+    border-radius: 99px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    font-family: var(--font);
+  }
+
+  .filter-btn:hover { border-color: var(--text-muted); color: var(--text); }
+  .filter-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  .task-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem 1.125rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.15s;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .task-card:hover { background: var(--surface2); }
+  .task-card.done { opacity: 0.5; }
+
+  .task-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .task-check:hover { border-color: var(--accent); }
+  .task-check.checked { background: var(--accent); border-color: var(--accent); }
+  .task-check.checked::after { content: '✓'; font-size: 11px; color: white; font-weight: 700; }
+
+  .task-body { flex: 1; min-width: 0; }
+
+  .task-title {
+    font-size: 0.9rem;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .task-card.done .task-title { text-decoration: line-through; color: var(--text-muted); }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 3px;
+  }
+
+  .tag {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  .tag-high { background: #f8717120; color: var(--red); }
+  .tag-medium { background: #fbbf2420; color: var(--amber); }
+  .tag-low { background: #4ade8020; color: var(--green); }
+  .tag-cat { background: var(--surface2); color: var(--text-muted); }
+
+  .task-date { font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); }
+
+  .task-actions { display: flex; gap: 0.5rem; opacity: 0; transition: opacity 0.15s; }
+  .task-card:hover .task-actions { opacity: 1; }
+
+  .icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+  }
+
+  .icon-btn:hover { background: var(--surface2); color: var(--red); }
+
+  .empty { text-align: center; padding: 4rem 2rem; color: var(--text-dim); font-size: 0.875rem; }
+  .empty-icon { font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.3; }
+
+  .task-card.dragging { opacity: 0.4; border: 1px dashed var(--accent); }
+  .task-card.drag-over { border-color: var(--accent); background: var(--accent-dim); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">task<span>/</span>flow</div>
+  <div class="header-meta" id="clock"></div>
+</header>
+
+<div class="app">
+  <aside>
+    <div class="sidebar-label">Views</div>
+    <button class="nav-item active" onclick="setView('all', this)">All Tasks <span class="count" id="count-all">0</span></button>
+    <button class="nav-item" onclick="setView('today', this)">Today <span class="count" id="count-today">0</span></button>
+    <button class="nav-item" onclick="setView('done', this)">Completed <span class="count" id="count-done">0</span></button>
+    <div class="sidebar-label">Categories</div>
+    <button class="nav-item" onclick="setView('Work', this)">Work <span class="count" id="count-Work">0</span></button>
+    <button class="nav-item" onclick="setView('Personal', this)">Personal <span class="count" id="count-Personal">0</span></button>
+    <button class="nav-item" onclick="setView('Study', this)">Study <span class="count" id="count-Study">0</span></button>
+    <button class="nav-item" onclick="setView('Health', this)">Health <span class="count" id="count-Health">0</span></button>
+  </aside>
+
+  <main>
+    <div class="main-header">
+      <div class="main-title">
+        <span id="view-title">All Tasks</span>
+        <small id="view-sub">Drag to reorder</small>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value accent" id="stat-total">0</div></div>
+      <div class="stat-card"><div class="stat-label">Done</div><div class="stat-value green" id="stat-done">0</div></div>
+      <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value amber" id="stat-pending">0</div></div>
+      <div class="stat-card"><div class="stat-label">High Priority</div><div class="stat-value red" id="stat-high">0</div></div>
+    </div>
+
+    <div class="add-task-bar">
+      <input type="text" class="task-input" id="task-input" placeholder="Add a new task..." onkeydown="if(event.key==='Enter')addTask()"/>
+      <select id="priority-select">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+      <select id="category-select">
+        <option value="Work">Work</option>
+        <option value="Personal">Personal</option>
+        <option value="Study">Study</option>
+        <option value="Health">Health</option>
+      </select>
+      <button class="btn btn-primary" onclick="addTask()">+ Add Task</button>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" onclick="setFilter('active', this)">Active</button>
+      <button class="filter-btn" onclick="setFilter('done', this)">Done</button>
+      <button class="filter-btn" onclick="setFilter('high', this)">High Priority</button>
+    </div>
+
+    <div class="task-list" id="task-list"></div>
+  </main>
+</div>
+
+<script>
+let tasks = [
+  { id: 1, title: "Set up PostgreSQL database schema", priority: "high", category: "Work", done: false, date: today() },
+  { id: 2, title: "Build REST API endpoints for task CRUD", priority: "high", category: "Work", done: false, date: today() },
+  { id: 3, title: "Implement drag-and-drop on task board", priority: "medium", category: "Work", done: true, date: today() },
+  { id: 4, title: "Review algorithms for technical interview", priority: "high", category: "Study", done: false, date: today() },
+  { id: 5, title: "Go for a 30-minute run", priority: "low", category: "Health", done: false, date: today() },
+  { id: 6, title: "Call mom this weekend", priority: "medium", category: "Personal", done: false, date: today() },
+];
+
+let nextId = 7;
+let currentView = 'all';
+let currentFilter = 'all';
+let dragSrc = null;
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function addTask() {
+  const input = document.getElementById('task-input');
+  const title = input.value.trim();
+  if (!title) return;
+  tasks.unshift({
+    id: nextId++,
+    title,
+    priority: document.getElementById('priority-select').value,
+    category: document.getElementById('category-select').value,
+    done: false,
+    date: today()
+  });
+  input.value = '';
+  render();
+}
+
+function toggleTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (t) t.done = !t.done;
+  render();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  render();
+}
+
+function setView(view, el) {
+  currentView = view;
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const titles = { all: 'All Tasks', today: "Today's Tasks", done: 'Completed', Work: 'Work', Personal: 'Personal', Study: 'Study', Health: 'Health' };
+  document.getElementById('view-title').textContent = titles[view] || view;
+  render();
+}
+
+function setFilter(filter, el) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function getViewedTasks() {
+  let list = [...tasks];
+  if (currentView === 'today') list = list.filter(t => t.date === today());
+  else if (currentView === 'done') list = list.filter(t => t.done);
+  else if (['Work','Personal','Study','Health'].includes(currentView)) list = list.filter(t => t.category === currentView);
+  if (currentFilter === 'active') list = list.filter(t => !t.done);
+  else if (currentFilter === 'done') list = list.filter(t => t.done);
+  else if (currentFilter === 'high') list = list.filter(t => t.priority === 'high');
+  return list;
+}
+
+function render() {
+  updateCounts();
+  updateStats();
+  const list = document.getElementById('task-list');
+  const viewed = getViewedTasks();
+  if (viewed.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">✦</div>No tasks here. Add one above.</div>`;
+    return;
+  }
+  list.innerHTML = viewed.map(t => `
+    <div class="task-card ${t.done ? 'done' : ''}" draggable="true" data-id="${t.id}"
+         ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event)" ondragleave="dragLeave(event)">
+      <div class="task-check ${t.done ? 'checked' : ''}" onclick="toggleTask(${t.id})"></div>
+      <div class="task-body">
+        <div class="task-title">${escHtml(t.title)}</div>
+        <div class="task-meta">
+          <span class="tag tag-${t.priority}">${t.priority}</span>
+          <span class="tag tag-cat">${t.category}</span>
+          <span class="task-date">${t.date}</span>
+        </div>
+      </div>
+      <div class="task-actions">
+        <button class="icon-btn" onclick="deleteTask(${t.id})" title="Delete">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateCounts() {
+  document.getElementById('count-all').textContent = tasks.length;
+  document.getElementById('count-today').textContent = tasks.filter(t => t.date === today()).length;
+  document.getElementById('count-done').textContent = tasks.filter(t => t.done).length;
+  ['Work','Personal','Study','Health'].forEach(c => {
+    document.getElementById('count-' + c).textContent = tasks.filter(t => t.category === c).length;
+  });
+}
+
+function updateStats() {
+  document.getElementById('stat-total').textContent = tasks.length;
+  document.getElementById('stat-done').textContent = tasks.filter(t => t.done).length;
+  document.getElementById('stat-pending').textContent = tasks.filter(t => !t.done).length;
+  document.getElementById('stat-high').textContent = tasks.filter(t => t.priority === 'high' && !t.done).length;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function dragStart(e) {
+  dragSrc = e.currentTarget;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', e.currentTarget.dataset.id);
+}
+
+function dragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+  return false;
+}
+
+function dragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+
+function drop(e) {
+  e.preventDefault();
+  const fromId = parseInt(e.dataTransfer.getData('text/plain'));
+  const toId = parseInt(e.currentTarget.dataset.id);
+  if (fromId === toId) return;
+  const fi = tasks.findIndex(t => t.id === fromId);
+  const ti = tasks.findIndex(t => t.id === toId);
+  const [moved] = tasks.splice(fi, 1);
+  tasks.splice(ti, 0, moved);
+  e.currentTarget.classList.remove('drag-over');
+  render();
+}
+
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+render();
+</script>
+</body>
+</html>
