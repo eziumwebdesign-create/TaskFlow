@@ -1,0 +1,42 @@
+# TaskFlow
+
+A full-stack task management app with drag-and-drop boards, priority labels, and category filtering.
+
+Built with **React · Node.js · Express · PostgreSQL**
+
+## Features
+- Create, complete, and delete tasks
+- Drag-and-drop to reorder tasks
+- Priority levels: High, Medium, Low
+- Categories: Work, Personal, Study, Health
+- Filter by status and priority
+- Live stats dashboard
+- REST API backend with PostgreSQL
+
+## Getting Started
+
+### Prerequisites
+- Node.js v18+
+- PostgreSQL running locally
+
+### Install & Run
+npm install
+export DATABASE_URL=postgresql://localhost:5432/taskflow
+npm run dev
+
+Then open index.html in your browser.
+
+## API Endpoints
+- GET    /api/tasks        Get all tasks
+- POST   /api/tasks        Create a task
+- PATCH  /api/tasks/:id    Update a task
+- DELETE /api/tasks/:id    Delete a task
+
+## Tech Stack
+- Frontend: HTML, CSS, Vanilla JS
+- Backend: Node.js, Express
+- Database: PostgreSQL
+- Deployment: Render
+
+## Author
+Your Name · LinkedIn · GitHub
